@@ -1,0 +1,98 @@
+/* Token Launch Radar — a dark, print-clean theme. One accent (signal green), one warning
+   (amber), hairline borders, tabular numerals. No framework, no webfonts, no network. */
+:root {
+  --bg: #0b0e13;
+  --panel: #11151d;
+  --panel-2: #161b26;
+  --line: #232a38;
+  --ink: #e8ecf3;
+  --muted: #98a2b5;
+  --faint: #5d6780;
+  --accent: #3ddc97;
+  --accent-dim: #1d3a2f;
+  --amber: #f5b14c;
+  --red: #f26d6d;
+  --radius: 10px;
+}
+* { box-sizing: border-box; }
+html { color-scheme: dark; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.55 -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+.skip { position: absolute; left: -999px; }
+.skip:focus { left: 8px; top: 8px; background: var(--accent); color: #06251a; padding: 6px 10px; border-radius: 6px; }
+main { max-width: 1180px; margin: 0 auto; padding: 28px 20px 56px; }
+a { color: var(--accent); }
+button, input, select { font: inherit; color: inherit; }
+
+/* Header */
+.masthead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 18px; border-bottom: 1px solid var(--line); padding-bottom: 16px; }
+.masthead h1 { font-size: 27px; letter-spacing: -0.02em; margin: 0; font-weight: 750; }
+.masthead h1 .dot { color: var(--accent); }
+.tagline { color: var(--muted); margin: 0; max-width: 62ch; }
+.meta { color: var(--faint); font-size: 13px; margin-left: auto; text-align: right; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 18px 0 6px; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.stat b { display: block; font-size: 21px; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 12.5px; }
+
+/* Method */
+.method { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: var(--radius); padding: 14px 18px; margin: 16px 0 22px; }
+.method h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--accent); margin: 0 0 6px; }
+.method p { margin: 6px 0; color: var(--ink); }
+.method .formula { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; font-size: 13.5px; overflow-x: auto; white-space: nowrap; }
+.method small { color: var(--muted); }
+
+/* Views + controls */
+.views { display: flex; gap: 8px; margin: 4px 0 12px; }
+.views button { background: var(--panel); border: 1px solid var(--line); color: var(--muted); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.views button[aria-pressed="true"] { background: var(--accent-dim); border-color: var(--accent); color: var(--ink); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.controls input[type="search"], .controls select { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+.controls input[type="search"] { min-width: 210px; }
+.controls label.check { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); font-size: 13.5px; cursor: pointer; }
+.count { color: var(--faint); font-size: 13px; margin-left: auto; font-variant-numeric: tabular-nums; }
+
+/* Board table */
+table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); background: var(--panel-2); position: sticky; top: 0; }
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable:hover { color: var(--ink); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--panel-2); }
+tbody tr:last-child td { border-bottom: none; }
+.rank { color: var(--faint); font-variant-numeric: tabular-nums; }
+.name { font-weight: 650; }
+.sub { color: var(--muted); font-size: 12.5px; }
+.up { color: var(--accent); }
+.down { color: var(--red); }
+.badge { display: inline-block; font-size: 11px; letter-spacing: 0.04em; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--amber); color: var(--amber); margin-left: 8px; vertical-align: 2px; }
+.badge.early { border-color: var(--line); color: var(--muted); }
+.chains { color: var(--muted); font-size: 12.5px; }
+
+/* Detail */
+.detail { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px; }
+.detail h2 { margin: 0 0 2px; font-size: 23px; letter-spacing: -0.01em; }
+.back { background: none; border: 1px solid var(--line); border-radius: 8px; padding: 5px 12px; cursor: pointer; color: var(--muted); margin-bottom: 14px; }
+.back:hover { color: var(--ink); }
+.kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin: 14px 0; }
+.kv div { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.kv b { display: block; font-size: 17px; font-variant-numeric: tabular-nums; }
+.kv span { color: var(--muted); font-size: 12px; }
+.modelbox { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13.5px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
+.modelbox .src { color: var(--muted); font-family: inherit; }
+ol.plan { margin: 10px 0 0; padding-left: 22px; }
+ol.plan li { margin: 8px 0; }
+h3.section { font-size: 13px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); margin: 20px 0 4px; }
+
+footer { color: var(--faint); font-size: 13px; border-top: 1px solid var(--line); margin-top: 28px; padding-top: 14px; }
+footer p { margin: 4px 0; }
+@media (max-width: 720px) {
+  .meta { margin-left: 0; text-align: left; }
+  td.chains, th.chains { display: none; }
+}
