@@ -132,6 +132,22 @@
     );
   }
 
+  function distribution() {
+    var edges = [1e6, 3e6, 1e7, 3e7, 1e8];
+    var labels = ['under $1M', '$1–3M', '$3–10M', '$10–30M', '$30–100M', '$100M+'];
+    var counts = [0, 0, 0, 0, 0, 0];
+    DATA.rows.forEach(function (r) {
+      var b = 0;
+      while (b < edges.length && r.implied_value_usd >= edges[b]) b++;
+      counts[b]++;
+    });
+    var max = Math.max.apply(null, counts.concat([1]));
+    var bars = counts.map(function (c, i) {
+      return '<div class="drow"><span class="dlab">' + labels[i] + '</span><span class="dbar"><i style="width:' + Math.round((c / max) * 100) + '%"></i></span><span class="dnum">' + c + '</span></div>';
+    }).join('');
+    return '<div class="dist"><h3>Implied value distribution — all ' + DATA.board_size + ' ranked rows</h3>' + bars + '</div>';
+  }
+
   /* ---------- board view ---------- */
   function controls() {
     var catOpts = '<option value="">All categories</option>' + categories().map(function (c) {
@@ -173,7 +189,7 @@
     main.innerHTML = header() + strip() + method() + viewTabs() + controls() +
       '<table><thead><tr>' + th('#', 'rank', 'num') + th('Protocol', 'name') + '<th class="chains">Chains</th>' +
       th('TVL', 'tvl_usd', 'num') + th('7d', 'change_7d', 'num') + th('Fitted ×', 'effective_multiple', 'num') + th('Odds', 'odds_pct', 'num') + th('Implied value', 'implied_value_usd', 'num') + th('Verdict', 'breakeven_crowd') +
-      '</tr></thead><tbody>' + (body || '<tr><td colspan="9">No protocol matches those filters.</td></tr>') + '</tbody></table>' + footer();
+      '</tr></thead><tbody>' + (body || '<tr><td colspan="9">No protocol matches those filters.</td></tr>') + '</tbody></table>' + distribution() + footer();
     document.getElementById('count').textContent = rows.length + ' of ' + DATA.board_size + ' shown';
     wire();
     main.setAttribute('aria-busy', 'false');

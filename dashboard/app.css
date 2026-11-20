@@ -97,6 +97,13 @@ h3.section { font-size: 13px; text-transform: uppercase; letter-spacing: 0.09em;
 .chip.farm { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 .chip.thin { border-color: var(--amber); color: var(--amber); }
 .chip.skip { border-color: var(--line); color: var(--faint); }
+.dist { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 18px; margin: 14px 0 0; }
+.dist h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 10px; }
+.drow { display: flex; align-items: center; gap: 10px; margin: 5px 0; font-size: 12.5px; }
+.dlab { width: 86px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.dbar { flex: 1; height: 12px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.dbar i { display: block; height: 100%; background: var(--accent); opacity: 0.75; }
+.dnum { width: 34px; color: var(--ink); font-variant-numeric: tabular-nums; }
 .fittable { max-width: 460px; margin: 10px 0; }
 .fittable td, .fittable th { padding: 5px 10px; }
 .fittable tbody tr { cursor: default; }
