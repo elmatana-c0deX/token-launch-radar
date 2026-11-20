@@ -8,30 +8,37 @@ A token launch radar: it reads one sealed DefiLlama snapshot of the protocol uni
 the protocols that record no token yet, ranks them by what their launch would be worth, and
 shows how to farm each one before it happens.
 
-**The model** — one function prices every protocol from the snapshot's own figures; no name
-is special-cased:
+**The model (radar-3)** — one function prices every protocol from the snapshot's own
+figures; no name is special-cased. What changed from the median-multiple model it replaces:
+every number is now *fitted* to the snapshot, and the fit is *tested blind* before it is
+allowed to price the board.
 
-```
-implied value = TVL × category multiple × growth factor × age factor
-```
+- **Fitted size curve** — log market cap is regressed on log TVL over the snapshot's 128
+  protocols whose token trades at a real price, with shrunken per-category offsets and
+  growth/age terms as candidates. Five candidate term sets are priced on five seeded 60/40
+  blind splits (fit on one side, test on the other); only the winner prices the board. On
+  this snapshot the plain curve wins at **246% median held-out error**, against 386% for the
+  old category-median model — the full table ships in the dashboard's method section.
+- **Launch odds** — a logistic model fitted on all 758 protocols (55% record a token;
+  AUC 0.70) over TVL, years listed and 7-day growth: each row's odds are the share of
+  look-alike protocols that already record a token.
+- **Costed farm verdicts** — every farm plan is costed to the dollar (gas plus the carry on
+  its capital) and netted against the launch it farms: at a stated 5% community allocation,
+  each row states the break-even crowd its plan pays for itself at, graded **FARM**
+  (25,000+), **THIN** (2,500+) or **SKIP**.
+- **Rank ranges** — the winning model is refitted on 80 bootstrap resamples of the priced
+  peers; each detail view shows the 10th–90th percentile range of its rank across refits.
 
-- **Category multiple** — the median market-cap/TVL ratio of the snapshot's own tokenized
-  protocols in the same category; pooled across a category family when a category has fewer
-  than 3 tokenized peers; the all-market median when no family applies.
-- **Growth factor** — `clamp(1 + change_7d × 0.02, 0.75, 1.40)` from the 7-day TVL change.
-- **Age factor** — +5% per year the protocol has run with no token recorded, capped at 5
-  years: seasoning is proof of demand.
-
-The board covers the snapshot's whole watchlist and adds early finds below its $50M floor
-that pass the same exclusion rule the watchlist was built with (no versioned products, no
+The board covers the snapshot's whole watchlist and every other rankable pre-token protocol
+that passes the same exclusion rule the watchlist was built with (no versioned products, no
 wrapped or staked products of tokens that already trade, no exchange entries, no children of
-tokenized parents). Every row carries a farm plan whose steps state what they cost and how
-long they take, generated from the protocol's own category, chains, TVL and age.
+tokenized parents). An integrity strip on the dashboard accounts for all 758 protocols in
+the snapshot — ranked, set aside with a stated reason, or counted among the token anchors.
 
 **The dashboard** (`dashboard/`) is a static page — no framework, no network. It renders the
 board (sortable, filterable by category and chain, watchlist toggle, search), a detail view
-for every protocol with its own model arithmetic and farm plan, and the live-token comparison
-set the multiples are learned from.
+for every protocol with its own model arithmetic, odds, plan costing and farm plan, and the
+live-token comparison set the fitted curve is learned from.
 
 ## Run it
 
