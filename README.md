@@ -8,26 +8,38 @@ A token launch radar: it reads one sealed DefiLlama snapshot of the protocol uni
 the protocols that record no token yet, ranks them by what their launch would be worth, and
 shows how to farm each one before it happens.
 
-**The model (radar-3)** — one function prices every protocol from the snapshot's own
-figures; no name is special-cased. What changed from the median-multiple model it replaces:
-every number is now *fitted* to the snapshot, and the fit is *tested blind* before it is
-allowed to price the board.
+**The model (radar-4)** — one function prices every protocol from the snapshot's own
+figures; no name is special-cased. What changed from radar-3: the board now ranks by
+*expected value* — a fitted launch value times fitted launch odds — and the fit must win
+*three* out-of-sample tests, not one, before it is allowed to price the board.
 
-- **Fitted size curve** — log market cap is regressed on log TVL over the snapshot's 128
-  protocols whose token trades at a real price, with shrunken per-category offsets and
-  growth/age terms as candidates. Five candidate term sets are priced on five seeded 60/40
-  blind splits (fit on one side, test on the other); only the winner prices the board. On
-  this snapshot the plain curve wins at **246% median held-out error**, against 386% for the
-  old category-median model — the full table ships in the dashboard's method section.
-- **Launch odds** — a logistic model fitted on all 758 protocols (55% record a token;
-  AUC 0.70) over TVL, years listed and 7-day growth: each row's odds are the share of
-  look-alike protocols that already record a token.
-- **Costed farm verdicts** — every farm plan is costed to the dollar (gas plus the carry on
-  its capital) and netted against the launch it farms: at a stated 5% community allocation,
-  each row states the break-even crowd its plan pays for itself at, graded **FARM**
-  (25,000+), **THIN** (2,500+) or **SKIP**.
-- **Rank ranges** — the winning model is refitted on 80 bootstrap resamples of the priced
+- **Winsorized fitted size curve, triple-tested** — log market cap is regressed on log TVL
+  over the snapshot's 128 protocols whose token trades at a real price. The winning term
+  set fits the curve, clamps its residuals at the 90th percentile, and refits, so a handful
+  of wild launches cannot bend the curve. Six candidate term sets are scored on five seeded
+  60/40 blind splits, an age-ordered walk-forward (a 60/40 split and a rolling fit), and
+  leave-one-out; the board goes to the set with the most protocol wins, and a set that
+  loses any protocol by more than 15% is ineligible. On this snapshot the winsorized curve
+  wins at **243% median blind error** (plain curve 246%, category-median model 386%) — the
+  full table ships in the dashboard's method section.
+- **Launch odds** — a logistic model fitted on all 758 protocols (55% record a token) over
+  TVL, years listed and its square, 7-day growth, chain count and the category family:
+  cross-validated AUC **0.73**, Brier **0.21**. Each row's odds are the share of look-alike
+  protocols that already record a token.
+- **Expected-value ranking** — `implied_value_usd` is the fitted launch value times the
+  launch odds, so a protocol the record says is unlikely to launch cannot top the board on
+  size alone. The pure fitted value rides in every row (`fitted_value_usd`), so the
+  arithmetic stays auditable.
+- **Costed, dated farm verdicts** — every farm plan is dated against the snapshot and
+  costed to the dollar (gas plus the carry on its stated deposit), then netted against the
+  expected value it farms: at a stated 5% community allocation, each row states the
+  break-even crowd its plan pays for itself at, graded **FARM** (25,000+), **THIN**
+  (2,500+) or **SKIP**.
+- **Rank ranges** — the winning model is refitted on 200 bootstrap resamples of the priced
   peers; each detail view shows the 10th–90th percentile range of its rank across refits.
+- **Self-test** — the generator runs nine integrity checks on every build (the accounting
+  closes, ranks run 1..N, verdicts recompute from their rows, a second build matches the
+  first byte for byte, …) and prints the results on the dashboard.
 
 The board covers the snapshot's whole watchlist and every other rankable pre-token protocol
 that passes the same exclusion rule the watchlist was built with (no versioned products, no

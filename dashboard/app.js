@@ -79,7 +79,7 @@
   function header() {
     return (
       '<div class="masthead"><h1>Token Launch Radar<span class="dot">.</span></h1>' +
-      '<p class="tagline">Every protocol in the snapshot that records no token yet, ranked by what its launch would be worth — priced by a model fitted on the snapshot itself and tested blind, with launch odds and a farm verdict netted to the dollar on every row.</p>' +
+      '<p class="tagline">Every protocol in the snapshot that records no token yet, ranked by what its launch would be worth in expectation — a fitted launch value times fitted launch odds, the model tested three ways out of sample, with a farm verdict netted to the dollar on every row.</p>' +
       '<p class="meta">Snapshot ' + esc(DATA.as_of) + ' · model ' + esc(DATA.model_version) + '<br>Source: ' + esc(DATA.source) + '</p></div>' +
       '<div class="stats">' +
       '<div class="stat"><b>' + DATA.board_size + '</b><span>protocols ranked</span></div>' +
@@ -106,15 +106,19 @@
   function method() {
     var f = DATA.fit, o = DATA.odds;
     var rows = f.candidates.map(function (c) {
-      return '<tr' + (c.terms === f.chosen_terms ? ' class="chosen"' : '') + '><td>' + esc(c.terms) + (c.terms === f.chosen_terms ? ' ← prices this board' : '') + '</td><td class="num">' + c.heldout_error_pct.toFixed(0) + '%</td></tr>';
+      return '<tr' + (c.terms === f.chosen_terms ? ' class="chosen"' : '') + '><td>' + esc(c.terms) + (c.terms === f.chosen_terms ? ' ← prices this board' : '') + '</td><td class="num">' + c.heldout_error_pct.toFixed(0) + '%</td><td class="num">' + c.walkforward_error_pct.toFixed(0) + '%</td><td class="num">' + c.loo_error_pct.toFixed(0) + '%</td></tr>';
+    }).join('');
+    var tests = DATA.selftest.map(function (t) {
+      return '<li class="' + (t.pass ? 'pass' : 'fail') + '"><b>' + (t.pass ? '✓' : '✗') + ' ' + esc(t.name) + '</b> — ' + esc(t.detail) + '</li>';
     }).join('');
     return (
-      '<section class="method"><h2>How the ranking is made — fitted, then tested blind</h2>' +
-      '<p class="formula">implied value = fitted size curve (log mcap on log TVL) over the snapshot\'s ' + f.trained_on + ' priced tokens — a term stays only if the blind test keeps it</p>' +
-      '<p>The value model is <b>fitted</b>, not tabulated: log market cap is regressed on log TVL across the protocols in this snapshot whose token trades at a real price, with shrunken per-category offsets and growth/age terms as candidates. Every candidate was priced <b>blind</b> — ' + f.splits + ' seeded 60/40 splits, fitted on one side and tested on the other — and the winner prices the board:</p>' +
-      '<table class="fittable"><thead><tr><th>Term set</th><th class="num">Held-out error, median</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<p><b>Launch odds</b> come from the peers\' record: a logistic fit over all ' + o.trained_on + ' protocols (base rate ' + o.base_rate_pct.toFixed(0) + '% record a token; AUC ' + o.auc.toFixed(2) + ') on TVL, years listed and 7-day growth. <b>Verdicts net each plan</b>: the plan is costed to the dollar, and at a stated 5% community allocation it pays for itself unless more wallets farm it than its break-even crowd — FARM at 25,000+, THIN at 2,500+, SKIP below that. <b>Rank ranges</b> on each detail view come from ' + f.bootstrap_refits + ' bootstrap refits of the winning model.</p>' +
-      '<small>Implied values are this model\'s claim about a hypothetical launch at the snapshot\'s figures — not a prediction that a token will exist. A protocol "records no token" in DefiLlama\'s data; that is what the board can know.</small></section>'
+      '<section class="method"><h2>How the ranking is made — fitted, then tested three ways</h2>' +
+      '<p class="formula">expected value = fitted launch value × launch odds — the fitted value is a winsorized size curve (log mcap on log TVL) over the snapshot\'s ' + f.trained_on + ' priced tokens</p>' +
+      '<p>The value model is <b>fitted</b>, not tabulated: log market cap is regressed on log TVL across the protocols in this snapshot whose token trades at a real price. Candidate term sets — the plain curve, a winsorized refit that clamps wild residuals before refitting, category offsets, growth and age terms — were each scored on <b>three out-of-sample protocols</b>: ' + f.splits + ' blind 60/40 splits, an age-ordered walk-forward, and leave-one-out. ' + esc(f.selection_rule) + ':</p>' +
+      '<table class="fittable"><thead><tr><th>Term set</th><th class="num">Blind splits</th><th class="num">Walk-forward</th><th class="num">Leave-one-out</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<p><b>Launch odds</b> come from the peers\' record: a logistic fit over all ' + o.trained_on + ' protocols (base rate ' + o.base_rate_pct.toFixed(0) + '% record a token) on TVL, years listed and its square, 7-day growth, chain count and the category family — cross-validated AUC ' + o.cv_auc.toFixed(2) + ', Brier ' + o.brier.toFixed(2) + ' (in-sample AUC ' + o.auc.toFixed(2) + '). The board ranks by the product: a protocol the record says is unlikely to launch cannot top it on size alone. <b>Verdicts net each plan</b>: the plan is dated and costed to the dollar, and at a stated 5% community allocation of the expected value it pays for itself unless more wallets farm it than its break-even crowd — FARM at 25,000+, THIN at 2,500+, SKIP below that. <b>Rank ranges</b> on each detail view come from ' + f.bootstrap_refits + ' bootstrap refits of the winning model.</p>' +
+      '<h3 class="section">Self-test — run by the generator on this build</h3><ul class="selftest">' + tests + '</ul>' +
+      '<small>Expected values are this model\'s claim about a hypothetical launch at the snapshot\'s figures — not a prediction that a token will exist. A protocol "records no token" in DefiLlama\'s data; that is what the board can know.</small></section>'
     );
   }
   function viewTabs() {
@@ -145,7 +149,7 @@
     var bars = counts.map(function (c, i) {
       return '<div class="drow"><span class="dlab">' + labels[i] + '</span><span class="dbar"><i style="width:' + Math.round((c / max) * 100) + '%"></i></span><span class="dnum">' + c + '</span></div>';
     }).join('');
-    return '<div class="dist"><h3>Implied value distribution — all ' + DATA.board_size + ' ranked rows</h3>' + bars + '</div>';
+    return '<div class="dist"><h3>Expected value distribution — all ' + DATA.board_size + ' ranked rows</h3>' + bars + '</div>';
   }
 
   /* ---------- board view ---------- */
@@ -182,14 +186,15 @@
         '<td class="num">' + pct(r.change_7d) + '</td>' +
         '<td class="num">' + r.effective_multiple.toFixed(2) + '×</td>' +
         '<td class="num">' + r.odds_pct.toFixed(0) + '%</td>' +
+        '<td class="num">' + money(r.fitted_value_usd) + '</td>' +
         '<td class="num"><b>' + money(r.implied_value_usd) + '</b></td>' +
         '<td>' + chip(r.verdict) + '</td></tr>'
       );
     }).join('');
     main.innerHTML = header() + strip() + method() + viewTabs() + controls() +
       '<table><thead><tr>' + th('#', 'rank', 'num') + th('Protocol', 'name') + '<th class="chains">Chains</th>' +
-      th('TVL', 'tvl_usd', 'num') + th('7d', 'change_7d', 'num') + th('Fitted ×', 'effective_multiple', 'num') + th('Odds', 'odds_pct', 'num') + th('Implied value', 'implied_value_usd', 'num') + th('Verdict', 'breakeven_crowd') +
-      '</tr></thead><tbody>' + (body || '<tr><td colspan="9">No protocol matches those filters.</td></tr>') + '</tbody></table>' + distribution() + footer();
+      th('TVL', 'tvl_usd', 'num') + th('7d', 'change_7d', 'num') + th('Fitted ×', 'effective_multiple', 'num') + th('Odds', 'odds_pct', 'num') + th('Fitted value', 'fitted_value_usd', 'num') + th('Expected value', 'implied_value_usd', 'num') + th('Verdict', 'breakeven_crowd') +
+      '</tr></thead><tbody>' + (body || '<tr><td colspan="10">No protocol matches those filters.</td></tr>') + '</tbody></table>' + distribution() + footer();
     document.getElementById('count').textContent = rows.length + ' of ' + DATA.board_size + ' shown';
     wire();
     main.setAttribute('aria-busy', 'false');
@@ -203,7 +208,8 @@
       '<section class="detail"><h2>' + esc(r.name) + (r.watchlist ? '<span class="badge">watchlist</span>' : '<span class="badge early">early find</span>') + ' ' + chip(r.verdict) + '</h2>' +
       '<p class="sub">' + esc(r.category || 'Uncategorised') + ' · ' + esc(r.chains.join(', ') || 'no chains recorded') + ' · rank #' + r.rank + ' of ' + DATA.board_size + ' · ' + DATA.fit.bootstrap_refits + ' bootstrap refits place it between #' + r.rank_low + ' and #' + r.rank_high + '</p>' +
       '<div class="kv">' +
-      '<div><b>' + money(r.implied_value_usd) + '</b><span>implied launch value</span></div>' +
+      '<div><b>' + money(r.implied_value_usd) + '</b><span>expected launch value — fitted value × launch odds</span></div>' +
+      '<div><b>' + money(r.fitted_value_usd) + '</b><span>fitted launch value before odds</span></div>' +
       '<div><b>' + money(r.tvl_usd) + '</b><span>TVL at the snapshot</span></div>' +
       '<div><b>' + (r.change_7d === null ? 'n/a' : (r.change_7d > 0 ? '+' : '') + r.change_7d.toFixed(1) + '%') + '</b><span>TVL change, 7 days</span></div>' +
       '<div><b>' + ageText(r.age_days) + '</b><span>running with no token recorded' + (r.listed_at ? ' (tracked since ' + esc(r.listed_at) + ')' : '') + '</span></div>' +
@@ -213,8 +219,8 @@
       '<div><b>#' + r.rank_low + '–#' + r.rank_high + '</b><span>rank range across ' + DATA.fit.bootstrap_refits + ' refits of the model</span></div>' +
       '</div>' +
       '<h3 class="section">The model, on this protocol</h3>' +
-      '<p class="modelbox">' + moneyFull(r.tvl_usd) + ' TVL × ' + r.effective_multiple.toFixed(2) + '× fitted multiple × ' + r.growth_multiplier.toFixed(2) + ' growth × ' + r.age_multiplier.toFixed(2) + ' age = <b>' + moneyFull(r.implied_value_usd) + '</b><br>' +
-      '<span class="src">Fitted source: ' + esc(r.multiple_source) + '. The fitted multiple is the size curve\'s price at this TVL; growth and age terms survived the blind test in the method section.</span></p>' +
+      '<p class="modelbox">' + moneyFull(r.tvl_usd) + ' TVL → <b>' + moneyFull(r.fitted_value_usd) + '</b> fitted launch value (' + r.effective_multiple.toFixed(2) + '× at this TVL) × ' + r.odds_pct.toFixed(0) + '% launch odds = <b>' + moneyFull(r.implied_value_usd) + '</b> expected value<br>' +
+      '<span class="src">Fitted source: ' + esc(r.multiple_source) + '. The term set that prices this row won the out-of-sample tests in the method section; the odds are the peers\' record, not a guess.</span></p>' +
       '<h3 class="section">How to farm it</h3><ol class="plan">' + steps + '</ol>' +
       '<h3 class="section">What would change this rank</h3>' +
       '<p class="sub">The fitted multiple moves when the snapshot\'s priced peers reprice against their own TVL; this row\'s rank range across refits is #' + r.rank_low + '–#' + r.rank_high + '. The verdict flips when the plan\'s cost or the launch odds push its break-even crowd across 25,000 (FARM) or 2,500 (THIN).</p>' +
@@ -231,7 +237,7 @@
         '<td class="num">' + (r.multiple === null ? '—' : r.multiple.toFixed(2) + '×') + '</td><td class="num">' + pct(r.change_7d) + '</td></tr>';
     }).join('');
     main.innerHTML = header() + strip() + method() + viewTabs() +
-      '<p class="sub" style="margin:0 0 12px">These protocols already trade. The board never ranks them — it learns from them: the size curve is fitted on the priced ones in this set, and the blind splits in the method section are drawn from the same peers. The realised multiple column is what each one actually trades at, shown next to the curve\'s fitted prices on the board.</p>' +
+      '<p class="sub" style="margin:0 0 12px">These protocols already trade. The board never ranks them — it learns from them: the size curve is fitted on the priced ones in this set, and the out-of-sample tests in the method section are drawn from the same peers. The realised multiple column is what each one actually trades at, shown next to the curve\'s fitted prices on the board.</p>' +
       '<table><thead><tr><th>Protocol</th><th class="num">TVL</th><th class="num">Market cap</th><th class="num">Realised multiple</th><th class="num">7d</th></tr></thead><tbody>' + body + '</tbody></table>' + footer();
     wire();
     main.setAttribute('aria-busy', 'false');

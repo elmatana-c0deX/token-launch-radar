@@ -104,7 +104,13 @@ h3.section { font-size: 13px; text-transform: uppercase; letter-spacing: 0.09em;
 .dbar { flex: 1; height: 12px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
 .dbar i { display: block; height: 100%; background: var(--accent); opacity: 0.75; }
 .dnum { width: 34px; color: var(--ink); font-variant-numeric: tabular-nums; }
-.fittable { max-width: 460px; margin: 10px 0; }
+.fittable { max-width: 640px; margin: 10px 0; }
+.selftest { list-style: none; margin: 8px 0 10px; padding: 0; columns: 2; column-gap: 28px; }
+.selftest li { break-inside: avoid; margin: 0 0 5px; font-size: 13px; color: var(--muted); }
+.selftest li b { color: var(--ink); font-weight: 600; }
+.selftest li.pass b { color: var(--accent); }
+.selftest li.fail b { color: #e5484d; }
+@media (max-width: 720px) { .selftest { columns: 1; } }
 .fittable td, .fittable th { padding: 5px 10px; }
 .fittable tbody tr { cursor: default; }
 .fittable tbody tr:hover { background: none; }
